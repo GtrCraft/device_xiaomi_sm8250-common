@@ -21,10 +21,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.display.AmbientDisplayConfiguration;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.UserHandle;
 import android.provider.Settings;
 import android.util.Log;
-
 import androidx.preference.PreferenceManager;
 
 import static android.provider.Settings.Secure.DOZE_ALWAYS_ON;
@@ -32,15 +33,18 @@ import static android.provider.Settings.Secure.DOZE_ENABLED;
 
 public final class DozeUtils {
 
+    private static final String TAG = "DozeUtils";
+    private static final boolean DEBUG = false;
+
+    private static final String DOZE_INTENT = "com.android.systemui.doze.pulse";
+
     protected static final String ALWAYS_ON_DISPLAY = "always_on_display";
+
     protected static final String CATEG_PICKUP_SENSOR = "pickup_sensor";
 
     protected static final String DOZE_ENABLE = "doze_enable";
 
     protected static final String GESTURE_PICK_UP_KEY = "gesture_pick_up";
-    private static final String TAG = "DozeUtils";
-    private static final boolean DEBUG = false;
-    private static final String DOZE_INTENT = "com.android.systemui.doze.pulse";
 
     public static void startService(Context context) {
         if (DEBUG) Log.d(TAG, "Starting service");
@@ -72,7 +76,7 @@ public final class DozeUtils {
                 DOZE_ENABLED, 1) != 0;
     }
 
-    public static void launchDozePulse(Context context) {
+    protected static void launchDozePulse(Context context) {
         if (DEBUG) Log.d(TAG, "Launch doze pulse");
         context.sendBroadcastAsUser(new Intent(DOZE_INTENT),
                 new UserHandle(UserHandle.USER_CURRENT));
@@ -101,11 +105,20 @@ public final class DozeUtils {
                 .getBoolean(gesture, false);
     }
 
-    public static boolean isPickUpEnabled(Context context) {
+    protected static boolean isPickUpEnabled(Context context) {
         return isGestureEnabled(context, GESTURE_PICK_UP_KEY);
     }
 
     public static boolean sensorsEnabled(Context context) {
         return isPickUpEnabled(context);
+    }
+
+    protected static Sensor getSensor(SensorManager sm, String type) {
+        for (Sensor sensor : sm.getSensorList(Sensor.TYPE_ALL)) {
+            if (type.equals(sensor.getStringType())) {
+                return sensor;
+            }
+        }
+        return null;
     }
 }
